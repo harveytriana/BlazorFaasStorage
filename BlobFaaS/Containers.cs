@@ -14,7 +14,7 @@ namespace BlobFaaS
         public GetContainers(BlobServiceClient blobServiceClient) => _blobServiceClient = blobServiceClient;
 
         [Function("GetContainers")]
-        public async ValueTask<IEnumerable<string>> Run(
+        public async Task<IEnumerable<string>> Run(
             [HttpTrigger(AuthorizationLevel.Anonymous, "get")] HttpRequestData req)
         {
             var ls = new List<string>();

@@ -93,7 +93,7 @@ namespace BlobFaaS
         public GetBlobs(BlobServiceClient blobServiceClient) => _blobServiceClient = blobServiceClient;
 
         [Function("GetBlobs")]
-        public async ValueTask<IEnumerable<FileRecord>> Run(
+        public async Task<IEnumerable<FileRecord>> Run(
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "GetBlobs/{container}")] HttpRequestData req,
             string container)
         {

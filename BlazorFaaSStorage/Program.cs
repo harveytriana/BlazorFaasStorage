@@ -17,6 +17,7 @@ namespace BlazorFaaSStorage
             var builder = WebAssemblyHostBuilder.CreateDefault(args);
             builder.RootComponents.Add<App>("#app");
 
+            // settings.json
             ApiRoot = builder.Configuration.GetSection("ApiRoot").Get<string>();
 
             // default 

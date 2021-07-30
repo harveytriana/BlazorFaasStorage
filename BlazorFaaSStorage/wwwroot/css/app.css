@@ -50,7 +50,43 @@ a, .btn-link {
         top: 0.5rem;
     }
 
-/* CUSTOMIZEDS */
+/* DRAG & DROP FILES*/
+.dropArea {
+    border: 2px dashed lightslategray;
+    padding: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    cursor: pointer;
+    position: relative;
+    min-height: 130px;
+    border-radius: 10px;
+    color: gray;
+}
+
+    .dropArea:hover {
+        background-color: whitesmoke;
+        color: dimgray;
+    }
+
+    .dropArea input[type=file] {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        opacity: 0;
+        cursor: pointer;
+    }
+
+.dropAreaDrug {
+    background-color: lightslategray;
+}
+
+.inputArea {
+    margin-bottom: 10px;
+}
+/* END D&D*/
+
 input:focus,
 select:focus,
 textarea:focus,
@@ -58,8 +94,25 @@ button:focus {
     outline: none !important;
 }
 
+.picklist {
+    border: 1px solid lightgray;
+    padding-right: 10px;
+    padding-left: 10px;
+    padding-top: 4px;
+    padding-bottom: 4px;
+    width: 200px;
+}
+
+.glassicon {
+    margin-right: 8px;
+    cursor: pointer;
+}
+
 /* GLASS BUTTON */
-.glass-btn { /* 0 */
+.glass-btn-main { /* 1 */
+    background-color: #2961B6;
+    color: #F5F5F5;
+    border: solid 1px #2961B6;
     padding: 4px;
     cursor: pointer;
     white-space: nowrap;
@@ -67,14 +120,56 @@ button:focus {
     text-overflow: ellipsis;
 }
 
-.glass-btn-primary { /* 1 */
-    background-color: #2961B6;
-    color: #F5F5F5;
-    border: solid 1px #2961B6;
-}
-
 .glass-btn-secundary { /* 2 */
     background-color: transparent;
     color: steelblue;
     border: solid 1px #2961B6;
+    padding: 4px;
+    cursor: pointer;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
+
+.store-table {
+    white-space: nowrap;
+    font-family: Calibri;
+    font-size: 13px
+}
+
+/* TABLE- SCROLL*/
+table tbody {
+    display: block;
+    max-height: 170px;
+    overflow-y: scroll;
+}
+
+    table thead, table tbody tr {
+        display: table;
+        width: 100%;
+        table-layout: fixed;
+    }
+
+/* SCROLL BARS */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+    cursor: default;
+}
+
+/* Track */
+::-webkit-scrollbar-track {
+    border-radius: 10px;
+}
+
+/* Handle */
+::-webkit-scrollbar-thumb {
+    background: rgb(162,183,213);
+    border-radius: 10px;
+}
+
+    /* Handle on hover */
+    ::-webkit-scrollbar-thumb:hover {
+        background: rgb(112,146,190);
+    }
+/* END SCROLL BARS */
