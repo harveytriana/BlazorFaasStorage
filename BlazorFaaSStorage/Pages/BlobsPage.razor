@@ -1,0 +1,102 @@
+﻿@page "/blobs"
+
+<table style="width:100%">
+    <tr>
+        <td>
+            <h2>Storage Blobs</h2>
+        </td>
+        <td style="text-align:right" valign="middle">
+            <img src="./images/function.png" />
+        </td>
+    </tr>
+</table>
+<hr />
+<table style="width:100%">
+    <tr>
+        <td>
+            <h4 style="color:steelblue">@container</h4>
+        </td>
+        <td style="text-align:right" valign="top">
+            <span class="oi oi-menu glassicon" data-menu="container-actions"></span>
+            @if (containers != null)
+            {
+                <select class="picklist" value="@container" @onchange="@ContainerChange">
+                    @foreach (var i in containers)
+                    {
+                        <option value="@i">@i</option>
+                    }
+                </select>
+            }
+        </td>
+    </tr>
+</table>
+@if (blobs != null)
+{
+    <table class="table table-sm store-table">
+        <thead>
+            <tr>
+                <th>File Name</th>
+                <th>Contnet-Type</th>
+                <th>Size</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var i in blobs)
+            {
+                <tr>
+                    <td>@i.FileName</td>
+                    <td>@i.ContentType</td>
+                    <td>@i.Size.ToFileSize()</td>
+                    <td style="width:100px;text-align:right">
+                        <span class="oi oi-ellipses glassicon" data-menu="blob-actions" @onmousedown="(()=>LetFileRecord(i))" />
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+    <hr />
+    <div>
+        <button class="glass-btn-main w-25" onclick="document.getElementById('browse-files').click()">
+            <span class="oi oi-cloud-upload glassicon"></span>
+            <span>Add Files</span>
+        </button>
+        <button class="glass-btn-secundary w-25" @onclick="CreateContainerDialog">
+            <span class="oi oi-box glassicon"></span>
+            <span>Add Container</span>
+        </button>
+        <br /><br />
+        <InputFile OnChange="@UploadFiles" @attributes="browseAttributes" multiple />
+    </div>
+}
+<hr />
+<p>@echo</p>
+
+@if (imageDataUrl != null)
+{
+    <hr />
+    <div style="text-align:center;">
+        <img src="@imageDataUrl" width="400" />
+    </div>
+}
+<br />
+<br />
+<br />
+<!-- POPUPS (don't use href) -->
+<div class="popup">
+    <div id="container-actions" class="popup-content">
+        <a @onclick="(()=>BlobAction(4))"><i class="oi oi-reload glassicon"></i>Refresh Blobs</a>
+        <a @onclick="(()=>BlobAction(5))"><i class="oi oi-box glassicon"></i>Add Container</a>
+        <a @onclick="(()=>BlobAction(6))"><i class="oi oi-trash glassicon"></i>Delete Container</a>
+    </div>
+</div>
+
+<div class="popup">
+    <div id="blob-actions" class="popup-content">
+        <a @onclick="(()=>BlobAction(1))"><i class="oi oi-image glassicon"></i>Open Image</a>
+        <a @onclick="(()=>BlobAction(2))"><i class="oi oi-cloud-download glassicon"></i>Download</a>
+        <a @onclick="(()=>BlobAction(3))"><i class="oi oi-trash glassicon"></i>Delete (no confirm)</a>
+    </div>
+</div>
+
+<BasicDialog @ref="dialog" OnInputChange="CreateContainerDialogResult" OnAnswerQuestion="DeleteContainerDialogResult"></BasicDialog>

@@ -1,0 +1,35 @@
+/* POPUP MENU */
+.popup {
+    position: initial;
+}
+
+.popup-content {
+    font-family: Calibri;
+    display: none;
+    position: absolute;
+    background-color: white;
+    width: 160px;
+    overflow: auto;
+    box-shadow: 4px 4px 8px 0px rgba(0, 0, 0, 0.1);
+    z-index: 1;
+    border: 1px solid #C8C8C8;
+}
+
+    .popup-content a {
+        color: black;
+        padding-left: 12px;
+        padding-top: 3px;
+        padding-bottom: 3px;
+        text-decoration: none;
+        display: block;
+        border-bottom: 1px solid #E8E8E8;
+        cursor: pointer;
+    }
+
+.popup a:hover {
+    background-color: #F0F0F0;
+}
+
+.popup-show {
+    display: block;
+}

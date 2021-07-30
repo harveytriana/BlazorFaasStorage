@@ -1,0 +1,25 @@
+﻿@page "/"
+<h2>
+    Isolated serverless functions from Blazor to manage cloud storage
+</h2>
+<hr />
+<p>
+    @ms
+</p>
+
+@code {
+    MarkupString ms => (MarkupString)description;
+
+    string description;
+
+    protected override void OnInitialized()
+    {
+        description = $@"
+This is an example of how to manage cloud files storage using Isolated Azure serverless functions.
+<br><br>
+To run this project in development mode, the <b>BlobFaaaS</b> project must be run simultaneously. 
+<br><br>
+The API Root has origin: <code>{Program.ApiRoot}<code>";
+    }
+}
+

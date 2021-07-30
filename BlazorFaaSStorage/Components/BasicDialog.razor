@@ -1,0 +1,143 @@
+﻿@implements IAsyncDisposable
+@inject IJSRuntime _js
+<!--
+Based in Boostrap
+Author: Harvey Triana    
+-->
+<div class="modal fade" id="basic-dialog" tabindex="-1" aria-labelledby="basic-dialogLabel" aria-modal="true"
+     role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title" id="basic-dialogLabel">@_title</h4>
+                <button type="button" class="close" aria-label="Close" @onclick="CloseModal">
+                    <span aria-hidden="true">×</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p>@_prompt</p>
+                @if (_isInput)
+                {
+                    <div class="form-horizontal">
+                        <input class="form-control" maxlength="250" type="text" tabindex="0"
+                           @bind-value="@_input" @onkeydown="@ObserveKeyCode" />
+                    </div>
+                }
+            </div>
+            <div class="modal-footer">
+                @if (_isPrompt)
+                {
+                    <button type="button" class="btn btn-primary w-25" @onclick="CloseModal">OK</button>
+                }
+                else if (_isInput)
+                {
+                    <button type="button" class="btn btn-light" @onclick="CloseModal">Cancel</button>
+                    <button type="button" class="btn btn-primary w-25" @onclick="PerformAccept">Accept</button>
+                }
+                else if (_isQuestion)
+                {
+                    <button type="button" class="btn btn-primary w-25" @onclick="PerformCancel">No</button>
+                    <button type="button" class="btn btn-danger w-25" @onclick="PerformAccept">Yes</button>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal-backdrop fade show" id="backdrop" style="display: none;"></div>
+
+@code {
+    IJSObjectReference module;
+
+    [Parameter] public EventCallback<string> OnInputChange { get; set; }
+    [Parameter] public EventCallback<bool> OnAnswerQuestion { get; set; }
+
+    string _title, _prompt, _input;
+    bool _isPrompt, _isInput, _isQuestion;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            var jsSource = $"./basic-dialog/BasicDialog.js?v={DateTime.Now.Ticks}";
+            module = await _js.InvokeAsync<IJSObjectReference>("import", jsSource);
+        }
+    }
+
+    void OpenModal()
+    {
+        Task.Run(async () =>
+        {
+            await InvokeAsync(StateHasChanged);
+            await module.InvokeVoidAsync("OpenModal");
+        });
+    }
+
+    void CloseModal()
+    {
+        Task.Run(async () => await module.InvokeVoidAsync("CloseModal"));
+    }
+
+    public void PromptDialog(string prompt, string title = null)
+    {
+        _title = title is null ? "Notify" : title;
+        _prompt = prompt;
+        _isPrompt = true;
+        _isInput = false;
+        _isQuestion = false;
+        OpenModal();
+    }
+
+    public void InputDialog(string prompt, string title, string defaultValue = null)
+    {
+        _title = title;
+        _prompt = prompt;
+        _input = defaultValue;
+        _isPrompt = false;
+        _isInput = true;
+        _isQuestion = false;
+        OpenModal();
+    }
+
+    public void QuestionDialog(string prompt, string title)
+    {
+        _title = title;
+        _prompt = prompt;
+        _isPrompt = false;
+        _isInput = false;
+        _isQuestion = true;
+        OpenModal();
+    }
+
+    void PerformAccept()
+    {
+        if (_isInput)
+        {
+            OnInputChange.InvokeAsync(_input);
+        }
+        else if (_isQuestion)
+        {
+            OnAnswerQuestion.InvokeAsync(true);
+        }
+        CloseModal();
+    }
+
+    void PerformCancel()
+    {
+        if (_isQuestion)
+        {
+            OnAnswerQuestion.InvokeAsync(false);
+        }
+        CloseModal();
+    }
+
+    void ObserveKeyCode(KeyboardEventArgs e)
+    {
+        if (e.Code == "Enter" || e.Code == "NumpadEnter") PerformAccept();
+        if (e.Code == "Escape") CloseModal();
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        await module.DisposeAsync();
+    }
+}

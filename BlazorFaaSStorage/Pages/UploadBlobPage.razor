@@ -1,0 +1,177 @@
+﻿@page "/upload-blob"
+@inject HttpClient _httpClient
+@inject IHttpClientFactory _clientFactory
+@using System.Text.Json
+@using System.IO
+
+<h1>Upload Blob</h1>
+<hr />
+<div>
+    <!-- Input component with custom UI -->
+    <button class="glass-btn glass-btn-primary w-25"
+            disabled="@uploading"
+            onclick="document.getElementById('browse-files').click()">
+        <span class="oi oi-file"></span>
+        <span> Select File</span>
+    </button>
+    <InputFile OnChange="@OnInputFileChange" @attributes="browseAttributes" />
+</div>
+<hr />
+<div>
+    <code>@echo</code>
+</div>
+
+@code {
+    // Determines if the Blob is uploaded as a hot file, or with sporadic access, big file
+    const long HOTSIZE = 20_000_000; // ~20 MG (arbitrary value less than 100)
+
+    // chunk size during upload
+    const long CHUNKSIZE = 600_000; // 600 KB
+
+    // just for the article example
+    readonly string container = "cloud-files";
+
+    // reactive message
+    string echo;
+
+    // use Wab API or Serverless function
+    HttpClient _httpService;
+
+    // upload variables
+    IBrowserFile file;
+    string contentType;
+    long totalBytes;
+    bool uploading;
+    DateTime now;
+
+    async Task OnInputFileChange(InputFileChangeEventArgs e)
+    {
+        SetHttpClient();
+
+        file = e.File;
+
+        await Echo($"Uploading {file.Name}... Wait please");
+
+        // blob is created with correct content-type
+        contentType = file.ContentType;
+        if (contentType == string.Empty)
+            contentType = "application/octet-stream";
+
+        totalBytes = file.Size;
+
+        now = DateTime.Now;
+
+        uploading = true;
+        if (totalBytes <= HOTSIZE)
+        {
+            await UploadBlob();
+        }
+        else
+        {
+            await UploadBigBlob();
+        }
+        uploading = false;
+    }
+
+    async ValueTask UploadBlob()
+    {
+        using var formFile = new MultipartFormDataContent();
+        var fileContent = new StreamContent(file.OpenReadStream(HOTSIZE));
+        fileContent.Headers.Add("Content-Type", contentType);
+        formFile.Add(fileContent, "file", file.Name);
+        try
+        {// POST
+            var url = $"api/Blobs/CreateBlob/{container}";
+            var response = await _httpService.PostAsync(url, formFile);
+            var json = await response.Content.ReadAsStringAsync();
+            var result = JsonSerializer.Deserialize<bool>(json);
+            if (result)
+            {
+                await Echo($"Uploaded complete. File Size: {totalBytes.ToFileSize()} | " +
+                           $"Upload Delay: {(DateTime.Now - now).TotalSeconds:N2}");
+            }
+            else
+            {
+                await Echo("The server returned unsuccessful task..");
+            }
+        }
+        catch (Exception exception)
+        {
+            await Echo("Exception: " + exception.Message);
+        }
+    }
+
+    async ValueTask UploadBigBlob()
+    {
+        long percent = 0;
+        long fragment = 0;
+        long chunkSize;
+        long uploadedBytes = 0;
+        long fragments = totalBytes / CHUNKSIZE + 1;
+
+        using (var stream = file.OpenReadStream(long.MaxValue))
+        {
+            while (uploading)
+            {
+                chunkSize = CHUNKSIZE;
+                if (uploadedBytes + CHUNKSIZE > totalBytes)
+                {// remainder
+                    chunkSize = totalBytes - uploadedBytes;
+                }
+                var buffer = new byte[chunkSize];
+                await stream.ReadAsync(buffer, 0, buffer.Length);
+                // upload this fragment
+                using var formFile = new MultipartFormDataContent();
+                var fileContent = new StreamContent(new MemoryStream(buffer));
+                fileContent.Headers.Add("Content-Type", contentType);
+                formFile.Add(fileContent, "file", file.Name);
+                try
+                {// POST
+                    var url = $"api/Blobs/AppendBlob/{container}/{fragment++}";
+                    var response = await _httpService.PostAsync(url, formFile);
+                    var json = await response.Content.ReadAsStringAsync();
+                    var result = JsonSerializer.Deserialize<bool>(json);
+                    if (result == false)
+                    {
+                        await Echo("The server returned unsuccessful task..");
+                        uploading = false;
+                        break;
+                    }
+                    uploadedBytes += chunkSize;
+                    percent = uploadedBytes * 100 / totalBytes;
+                    // report progress 
+                    await Echo($"Uploaded {percent}% Fragment {fragment} of {fragments}");
+                    if (percent >= 100)
+                    {
+                        await Echo($"Uploaded {percent}% File Size: {totalBytes.ToFileSize()} | " +
+                                   $"Upload Delay: {(DateTime.Now - now).TotalSeconds:N2}");
+                        uploading = false;
+                    }
+                }
+                catch (Exception exception)
+                {
+                    await Echo("Exception: " + exception.Message);
+                    uploading = false;
+                }
+            }
+        }
+    }
+
+    async ValueTask Echo(string message)
+    {
+        echo = message;
+        await InvokeAsync(StateHasChanged);
+    }
+
+    void SetHttpClient()
+    {
+        if (_httpService is null)
+            _httpService = _clientFactory.CreateClient("Serverless");
+    }
+
+    readonly Dictionary<string, object> browseAttributes = new()
+    {
+        { "style", "display:none" }, // for custon label
+        { "id", "browse-files" }     // for custom label
+    };
+}
