@@ -1,7 +1,7 @@
-using Azure.Storage.Blobs;
+using System;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using System;
+using Azure.Storage.Blobs;
 
 namespace BlobFaaS
 {
@@ -9,6 +9,7 @@ namespace BlobFaaS
     {
         public static void Main()
         {
+            // contains storage connection string
             var storageConnectionString = Environment.GetEnvironmentVariable("AzureWebJobsStorage");
 
             var host = new HostBuilder()

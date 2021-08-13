@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Azure.Storage.Blobs;
 using Azure.Storage.Blobs.Models;
@@ -40,7 +41,7 @@ namespace BlobFaaS
         public CreateContainer(BlobServiceClient blobServiceClient) => _blobServiceClient = blobServiceClient;
 
         [Function("CreateContainer")]
-        public async ValueTask<HttpResponseData> Run(
+        public async Task<HttpResponseData> Run(
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "CreateContainer/{name}")] HttpRequestData req,
             string name)
         {

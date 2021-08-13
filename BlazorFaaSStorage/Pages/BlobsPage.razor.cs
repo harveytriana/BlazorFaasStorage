@@ -257,9 +257,9 @@ namespace BlazorFaaSStorage.Pages
                 echo = $"'{name}' anready exist.";
                 return;
             }
-            if (await CreateContainer(value)) {
-                container = value;
-                containers.Add(container);
+            if (await CreateContainer(name)) {
+                containers.Add(name);
+                container = name;
                 blobs.Clear();
                 imageDataUrl = null;
                 await InvokeAsync(StateHasChanged);
