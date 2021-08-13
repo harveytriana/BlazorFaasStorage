@@ -15,7 +15,7 @@ namespace BlobFaaS
             var host = new HostBuilder()
                 .ConfigureFunctionsWorkerDefaults()
                 .ConfigureServices(services => {
-                    // Add Logging
+                    // Logging 
                     services.AddLogging();
                     // blob services
                     services.AddScoped(_ => new BlobServiceClient(storageConnectionString));

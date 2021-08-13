@@ -1,17 +1,17 @@
 ﻿// ======================================
 // BlazorSpread.net
 // ======================================
-using BlazorFaaSStorage.Components;
-using Microsoft.AspNetCore.Components;
-using Microsoft.AspNetCore.Components.Forms;
-using Microsoft.JSInterop;
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Collections.Generic;
 using System.Net.Http;
 using System.Net.Http.Json;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Forms;
+using Microsoft.JSInterop;
+using BlazorFaaSStorage.Components;
 
 namespace BlazorFaaSStorage.Pages
 {
@@ -41,9 +41,9 @@ namespace BlazorFaaSStorage.Pages
             try {
                 var q = await GetContainers();
                 containers = q.ToList();
-                // set popups (needs after render)
-                await Task.Delay(200);
-                //InvokeAsync(StateHasChanged);
+                // set popups (runs after render)
+                await Task.Delay(200); // important
+
                 await Js.InvokeVoidAsync("contextMenuSetup", "container-actions");
                 // load first container
                 if (containers.Any()) {
@@ -113,7 +113,7 @@ namespace BlazorFaaSStorage.Pages
         }
 
         /// <summary>
-        /// 
+        /// Execute the acion from command in popup menu
         /// </summary>
         async Task BlobAction(int index)
         {
@@ -157,7 +157,7 @@ namespace BlazorFaaSStorage.Pages
 
         #region Uploader
         const int MAXFILES = 32;
-        const long MINBIGFILE = 104857600 / 2; // 50 MG (max allow request)
+        const long HOTSIZE = 104857600 / 2; // 50 MG (max allow request)
         bool uploading;
 
         readonly Dictionary<string, object> browseAttributes = new()
@@ -173,7 +173,7 @@ namespace BlazorFaaSStorage.Pages
             bool result;
             foreach (var file in e.GetMultipleFiles(MAXFILES)) {
                 echo = $"Uploading {file.Name}, {file.Size.ToFileSize()} ...";
-                if (file.Size <= MINBIGFILE) {
+                if (file.Size <= HOTSIZE) {
                     result = await UploadFile(file);
                 }
                 else {
