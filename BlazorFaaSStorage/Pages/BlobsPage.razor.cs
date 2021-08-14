@@ -43,9 +43,8 @@ namespace BlazorFaaSStorage.Pages
                 containers = q.ToList();
                 // set popups (runs after render)
                 await Task.Delay(200); // important
-
                 await Js.InvokeVoidAsync("contextMenuSetup", "container-actions");
-                // load first container
+                // load blobs from the first container
                 if (containers.Any()) {
                     container = containers.First();
                     await PopulateBlobsList();
@@ -59,7 +58,6 @@ namespace BlazorFaaSStorage.Pages
 
         async Task ContainerChange(ChangeEventArgs e)
         {
-            // load containes blobs
             container = e.Value.ToString();
             await PopulateBlobsList();
         }
@@ -74,7 +72,7 @@ namespace BlazorFaaSStorage.Pages
                     imageFile = fileRecord.FileName;
                     echo = imageFile;
                 }
-                else { echo = $"Not found."; }
+                else { echo = $"File not found."; }
             }
             else { echo = "File is not image."; }
         }
@@ -83,7 +81,7 @@ namespace BlazorFaaSStorage.Pages
         {
             echo = $"Download: {container}/{fileRecord.FileName}";
             await InvokeAsync(StateHasChanged);
-            // Delegate the task to the browser to download the file, just pass the URI
+            // delegate the task to the browser to download the file, just pass the URI
             var url = $"{Program.ApiRoot}/api/GetBlobContent/{container}/{fileRecord.FileName}";
             await Js.InvokeVoidAsync("performDownloadFetch", url, fileRecord.FileName, fileRecord.ContentType);
         }
@@ -124,23 +122,23 @@ namespace BlazorFaaSStorage.Pages
             // target object is fileRecord, that was let in LetFileRecord()
             switch (index) {
                 case 1:
-                await GetImage();
-                break;
+                    await GetImage();
+                    break;
                 case 2:
-                await DownloadFile();
-                break;
+                    await DownloadFile();
+                    break;
                 case 3:
-                await DeleteBlob();
-                break;
+                    await DeleteBlob();
+                    break;
                 case 4:
-                await RefreshContainer();
-                break;
+                    await RefreshContainer();
+                    break;
                 case 5:
-                CreateContainerDialog();
-                break;
+                    CreateContainerDialog();
+                    break;
                 case 6:
-                DeleteContainerDialog();
-                break;
+                    DeleteContainerDialog();
+                    break;
             }
         }
 
@@ -181,14 +179,22 @@ namespace BlazorFaaSStorage.Pages
                 }
                 if (result) {
                     uploads++;
-                    blobs.Add(new FileRecord(file.Name, file.ContentType.FixContentType(), file.Size));
+                    fileRecord = new FileRecord(file.Name, file.ContentType.FixContentType(), file.Size);
+                    blobs.Add(fileRecord);
                 }
             }
             echo = $"Load {uploads} files";
             if (uploads > 0) {// subscribe menu event
                 await InvokeAsync(StateHasChanged);
                 await Js.InvokeVoidAsync("contextMenuSetup", "blob-actions");
-                //TODO Scroll
+                // shows the last image uploaded
+                if (fileRecord.ContentType.IsContentImage()) {
+                    var data = await GetFileContent(container, fileRecord.FileName);
+                    if (data != null) {
+                        imageDataUrl = $"data:{fileRecord.ContentType};base64,{Convert.ToBase64String(data)}";
+                        imageFile = fileRecord.FileName;
+                    }
+                }
             }
             uploading = false;
         }
